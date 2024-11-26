@@ -45,7 +45,6 @@ const QuestionForm: React.FC = () => {
     }
   };
 
-  // Format the confidence score in a more readable way
   const formatConfidence = (confidence: number): string => {
     const percentage = (confidence * 100).toFixed(1);
     if (parseFloat(percentage) >= 90) return `High (${percentage}%)`;
@@ -54,7 +53,7 @@ const QuestionForm: React.FC = () => {
   };
 
   return (
-    <div className="p-4 mx-auto space-y-4">
+    <div className="p-4 space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
@@ -145,8 +144,8 @@ const QuestionForm: React.FC = () => {
                   li: ({node, ...props}) => <li className="my-1" {...props} />,
                   strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
                   table: ({node, ...props}) => (
-                    <div className="overflow-x-auto my-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <table className="w-auto divide-y divide-gray-200 dark:divide-gray-700" {...props} />
+                    <div className="overflow-x-auto my-4">
+                      <table className="min-w-full border-separate border-spacing-0 rounded-lg border border-gray-200 dark:border-gray-700" {...props} />
                     </div>
                   ),
                   thead: ({node, ...props}) => (
@@ -154,23 +153,22 @@ const QuestionForm: React.FC = () => {
                   ),
                   th: ({node, ...props}) => (
                     <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" 
+                      className="sticky top-0 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100" 
                       {...props}
                     />
                   ),
                   td: ({node, ...props}) => (
                     <td 
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+                      className="border-b border-gray-200 dark:border-gray-700 px-6 py-3 text-sm"
                       {...props}
                     />
                   ),
                   tr: ({node, ...props}) => (
                     <tr 
-                      className="even:bg-gray-50 dark:even:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                       {...props}
                     />
                   ),
-                  // Handle code blocks within the answer
                   code: ({node, inline, ...props}) => (
                     inline ? 
                       <code className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm" {...props} /> :
