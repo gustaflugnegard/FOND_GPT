@@ -4,10 +4,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface CustomCodeProps {
+  node?: any;
   inline?: boolean;
   className?: string;
-  children: React.ReactNode;
-  [key: string]: any; // To handle any other props
+  children?: React.ReactNode;
 }
 import {
   Button,
@@ -142,7 +142,7 @@ const AskAI = () => {
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    code: ({ node, inline, className, children, ...props }) => {
+                    code: ({ node, inline, className, children, ...props }: CustomCodeProps) => {
                       return inline ? (
                         <code
                           className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm"
