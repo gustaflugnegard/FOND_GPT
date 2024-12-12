@@ -1,6 +1,6 @@
 'use client';
 import { useState, ChangeEvent } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface CustomCodeProps {
@@ -21,6 +21,26 @@ import {
   AlertDescription,
 } from "@/components/ui/index";
 import { Loader2 } from "lucide-react";
+
+const CustomCodeComponent: Components['code'] = (props) => {
+  const { className, children, ...rest } = props;
+  const isInline = !className?.includes('language-');
+
+  return isInline ? (
+    <code
+      className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm"
+      {...rest}
+    >
+      {children}
+    </code>
+  ) : (
+    <pre className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap break-words">
+      <code className="text-sm" {...rest}>
+        {children}
+      </code>
+    </pre>
+  );
+};
 
 const AskAI = () => {
   const [question, setQuestion] = useState('');
@@ -142,22 +162,7 @@ const AskAI = () => {
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    code: ({ node, inline, className, children, ...props }: CustomCodeProps) => {
-                      return inline ? (
-                        <code
-                          className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm"
-                          {...props}
-                        >
-                          {children}
-                        </code>
-                      ) : (
-                        <pre className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap break-words">
-                          <code className="text-sm" {...props}>
-                            {children}
-                          </code>
-                        </pre>
-                      );
-                    },
+                    code: CustomCodeComponent
                   }}
                 >
                   {response}
