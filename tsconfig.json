@@ -21,8 +21,16 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["deno"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/chat.js"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "components/chat.js",
+    "types/deno.d.ts"
+  ],
   "exclude": ["node_modules"]
 }
