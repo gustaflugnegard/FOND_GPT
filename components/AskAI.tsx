@@ -1,14 +1,9 @@
 'use client';
-import { useState, ChangeEvent } from 'react';
-import ReactMarkdown, { Components } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
-interface CustomCodeProps {
-  node?: any;
-  inline?: boolean;
-  className?: string;
-  children?: React.ReactNode;
-}
+import { useState, ChangeEvent } from 'react';
+import ReactMarkdown from 'react-markdown';
+import React, { ReactNode } from 'react';
+import remarkGfm from 'remark-gfm';
 import {
   Button,
   Card,
@@ -22,25 +17,29 @@ import {
 } from "@/components/ui/index";
 import { Loader2 } from "lucide-react";
 
-const CustomCodeComponent: Components['code'] = (props) => {
-  const { className, children, ...rest } = props;
-  const isInline = !className?.includes('language-');
+interface CodeProps {
+  node?: any;
+  inline?: boolean;
+  className?: string;
+  children?: ReactNode;
+}
 
-  return isInline ? (
-    <code
-      className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm"
-      {...rest}
-    >
-      {children}
-    </code>
-  ) : (
-    <pre className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap break-words">
-      <code className="text-sm" {...rest}>
+const CustomCodeComponent = ({ node, className, children, ...props }: CodeProps) => {
+  return (
+    <pre className="p-6 mb-6 rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap break-words">
+      <code
+        {...props}
+        className={`text-sm ${className || ''}`}
+      >
         {children}
       </code>
     </pre>
   );
 };
+
+
+
+
 
 const AskAI = () => {
   const [question, setQuestion] = useState('');
@@ -136,7 +135,7 @@ const AskAI = () => {
                 )}
               </Button>
             </div>
-            <small className="text-gray-500">Question Tokens: {questionTokens}</small>
+            <small className="text-gray-500 ml-2">Question Tokens: {questionTokens}</small>
 
 
           </form>
@@ -154,15 +153,14 @@ const AskAI = () => {
           )}
 
           {response && (
-            <div className="mt-4">
+            <div className="">
               <CardTitle className="flex items-center justify-between">
-                <span>Answer</span>
               </CardTitle>
-              <div className="prose prose-sm max-w-none dark:prose-invert mt-2 leading-relaxed">
+              <div className="prose prose-sm max-w-none dark:prose-invert mt-4 leading-relaxed space-y-2">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    code: CustomCodeComponent
+                    code: CustomCodeComponent,
                   }}
                 >
                   {response}
@@ -170,6 +168,7 @@ const AskAI = () => {
               </div>
             </div>
           )}
+
 
           {isLoading && (
             <div className="mt-4 flex items-center justify-center">
