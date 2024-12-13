@@ -90,57 +90,62 @@ const AskAI = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="relative flex flex-col items-center justify-center sm:flex-row">
+    <div className="p-4 space-y-4 sm:px-0">
+      <Card className="sm:max-w-4xl mx-auto w-full">
+        <CardHeader className="relative">
+          <div className="flex items-center justify-between mb-2">
             <select
               value={edgeFunction}
               onChange={(e) => setEdgeFunction(e.target.value)}
-              className="p-2 border rounded-md mb-4 sm:mb-0 sm:mr-4"
+              className="p-2 border rounded-md w-40"
             >
-              <option value="edge2">Fund Database</option>
+              <option value="edge2">Fond Databas</option>
               <option value="edge1">GPT Knowledge</option>
             </select>
-            <CardTitle className="text-2xl font-bold text-center">Q/A Svenska Fonder</CardTitle>
+            <div></div> {/* Placeholder to balance the layout */}
           </div>
-          <CardDescription className="text-center w-full">
-            Ask questions about Swedish funds and their investments
+          <div className="flex justify-center">
+            <CardTitle className="text-2xl font-bold">
+              Q/A Svenska Fonder
+            </CardTitle>
+          </div>
+          <CardDescription className="text-center w-full mt-2">
+            Ställ dina frågor om Svenska fonder och deras innehav, landfördelning, sektorer och mm.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                value={question}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
-                placeholder="E.g., 'Which funds have the highest US exposure?'"
-                className="flex-1"
-                required
-                aria-label="Question input"
-              />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  value={question}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setQuestion(e.target.value)}
+                  placeholder="E.g., 'Vilka länder investerar Avanza Zero i?'"
+                  className="w-full"
+                  required
+                  aria-label="Question input"
+                />
+              </div>
               <Button
                 type="submit"
                 disabled={isLoading || !question.trim()}
                 aria-label={isLoading ? "Loading..." : "Submit question"}
+                className="w-full sm:w-auto"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Fetching...
+                    Hämtar...
                   </>
                 ) : (
-                  'Submit'
+                  'Fråga'
                 )}
               </Button>
             </div>
             <small className="text-gray-500 ml-2">Question Tokens: {questionTokens}</small>
-
-
           </form>
-
-
+  
           {error && (
             <Alert variant="destructive" className="mt-4">
               <AlertDescription>
@@ -151,7 +156,7 @@ const AskAI = () => {
               </AlertDescription>
             </Alert>
           )}
-
+  
           {response && (
             <div className="">
               <CardTitle className="flex items-center justify-between">
@@ -168,8 +173,7 @@ const AskAI = () => {
               </div>
             </div>
           )}
-
-
+  
           {isLoading && (
             <div className="mt-4 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -179,6 +183,6 @@ const AskAI = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default AskAI;

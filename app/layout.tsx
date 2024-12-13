@@ -36,7 +36,7 @@ export default function RootLayout({
               </div>
             </nav>
 
-            <div className="flex-1 container w-[80%] px-4 py-8">
+            <div className="flex-1 container">
               {children}
             </div>
 
