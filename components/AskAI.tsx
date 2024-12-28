@@ -37,10 +37,6 @@ const CustomCodeComponent = ({ node, className, children, ...props }: CodeProps)
   );
 };
 
-
-
-
-
 const AskAI = () => {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
@@ -90,7 +86,7 @@ const AskAI = () => {
   };
 
   return (
-    <div className="p-4 space-y-4 sm:px-0">
+    <div className="space-y-4 sm:px-0">
       <Card className="sm:max-w-4xl mx-auto w-full">
         <CardHeader className="relative">
           <div className="flex items-center justify-between mb-2">
