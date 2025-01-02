@@ -9,7 +9,7 @@ export default function AvgiftChartContainer() {
     const [showChart, setChart] = useState(true);
 
     return (
-        <div className="sm:max-w-4xl mx-auto w-full p-2 border rounded-md mt-2">
+        <div className="max-w-full sm:max-w-5xl mx-auto w-full p-2 border rounded-md mt-2 shadow-md sm:p-4 sm:rounded-lg"> 
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold ">Hur påverkar fondavgiften avkastningen?</h1>
@@ -31,7 +31,7 @@ export default function AvgiftChartContainer() {
                     </div>
                 </label>
             </div>
-            <div className="border-t border-gray-700 mt-4 pt-4 min-h-[400px] flex items-center justify-center">
+            <div className="border-t mt-4 pt-4 min-h-[470px] flex items-center justify-center">
                 {showChart ? <FeeImpactChart /> : <AvgiftBarChart />}
             </div>
         </div>

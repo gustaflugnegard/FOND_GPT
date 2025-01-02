@@ -10,7 +10,7 @@ export default function AssetChartContainer() {
     const [showChart, setChart] = useState(true);
 
     return (
-        <div className="sm:max-w-4xl mx-auto w-full p-2 border rounded-md mt-2">
+        <div className="max-w-full sm:max-w-5xl mx-auto w-full p-2 border rounded-md mt-2 shadow-md sm:p-4 sm:rounded-lg"> 
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold ">Top 10 Fonderna (YTD)</h1>
@@ -32,7 +32,7 @@ export default function AssetChartContainer() {
                     </div>
                 </label>
             </div>
-            <div className="border-t border-gray-700 mt-4 pt-4 min-h-[400px] flex items-center justify-center">
+            <div className="border-t mt-4 pt-4 min-h-[400px] flex items-center justify-center">
                 {showChart ? <Fondbarchart /> : <Scatterchart />}
             </div>
         </div>

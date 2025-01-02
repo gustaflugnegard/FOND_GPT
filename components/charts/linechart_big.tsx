@@ -113,9 +113,9 @@ export default function LineChart() {
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")
-          .attr("stroke", "white");
+          .attr("stroke", "hsl(var(--foreground))");
         g.selectAll(".tick text")
-          .attr("fill", "white")
+          .attr("fill", "hsl(var(--foreground))")
           .style("font-size", "10px")
           .attr("transform", "rotate(-45)")
           .attr("text-anchor", "end");
@@ -127,7 +127,7 @@ export default function LineChart() {
         g.select(".domain").remove();
         g.selectAll(".tick line").remove();
         g.selectAll(".tick text")
-          .attr("fill", "white")
+          .attr("fill", "hsl(var(--foreground))")
           .style("font-size", "10px");
       })
 
@@ -143,7 +143,7 @@ export default function LineChart() {
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")
-          .attr("stroke", "cyan")
+          .attr("stroke", "hsl(var(--muted-foreground))")
           .attr("stroke-opacity", 0.2)
           .attr("stroke-array", "6,2");
       });
@@ -155,12 +155,12 @@ export default function LineChart() {
       .attr("class", "tooltip")
       .style("position", "absolute")
       .style("visibility", "hidden")
-      .style("background", "rgba(0, 0, 0, 0.9)")
-      .style("color", "white")
+      .style("background", "hsl(var(--inverse_foreground))")
+      .style("color", "hsl(var(--foreground))")
       .style("padding", "8px")
       .style("border-radius", "8px")
-      .style("border", "1px solid rgba(255, 255, 255, 0.2)")
-      .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 255, 255, 0.2)")
+      .style("border", `1px solid hsl(var(--foreground) / 0.2)`)
+      .style("box-shadow", "0 4px 6px hsl(var(--foreground) / 0.1), 0 0 8px hsl(var(--custom_cyan) / 0.3)")
       .style("font-size", "12px")
       .style("backdrop-filter", "blur(4px)")
       .style("z-index", "1000")
@@ -208,8 +208,8 @@ export default function LineChart() {
           tooltip
           .html(`
             <div class="font-bold mb-1">${isin}</div>
-            <div class="text-cyan-300">Månad: ${formatTime(new Date(closestData.Month))}</div>
-            <div class="text-cyan-300">Kumulativ avkastning: ${closestData.Cumulative_Return.toFixed(2)}</div>
+            <div style="color: hsl(var(--custom_cyan))">Månad: ${formatTime(new Date(closestData.Month))}</div>
+            <div style="color: hsl(var(--custom_cyan))">Kumulativ avkastning: ${closestData.Cumulative_Return.toFixed(2)}</div>
           `)
             .style("left", `${event.pageX + 10}px`)
             .style("top", `${event.pageY - 20}px`);
@@ -254,14 +254,14 @@ export default function LineChart() {
     legendItems.append("circle")
       .attr("r", 5)
       .attr("fill", d => colorScale(d)) // Use colorScale based on ISIN or category
-      .attr("stroke", "white")
+      .attr("stroke", "hsl(var(--foreground))")
       .attr("stroke-width", 1);
 
     // Append text labels to legend items
     legendItems.append("text")
       .attr("x", 10)
       .attr("y", 3)
-      .attr("fill", "white")
+      .attr("fill", "hsl(var(--foreground))")
       .text(d => d); // Display ISIN or category name as label
 
     // Adjust SVG height to accommodate the legend

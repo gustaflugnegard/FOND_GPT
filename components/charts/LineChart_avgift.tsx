@@ -96,7 +96,7 @@ export default function FeeImpactChart() {
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")
-          .attr("stroke", "cyan")
+          .attr("stroke", "hsl(var(--muted-foreground))")
           .attr("stroke-opacity", 0.2)
           .attr("stroke-array", "6,2");
       });
@@ -108,9 +108,9 @@ export default function FeeImpactChart() {
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")
-          .attr("stroke", "white");
+          .attr("stroke", "hsl(var(--foreground))");
         g.selectAll(".tick text")
-          .attr("fill", "white")
+          .attr("fill", "hsl(var(--foreground))")
           .style("font-size", "10px")
           .attr("transform", "rotate(-45)")
           .attr("text-anchor", "end");
@@ -122,7 +122,7 @@ export default function FeeImpactChart() {
         g.select(".domain").remove();
         g.selectAll(".tick line").remove();
         g.selectAll(".tick text")
-          .attr("fill", "white")
+          .attr("fill", "hsl(var(--foreground))")
           .style("font-size", "10px");
       })
 
@@ -130,7 +130,7 @@ export default function FeeImpactChart() {
     chart.append("path")
       .datum(data)
       .attr("fill", "none")
-      .attr("stroke", "#eeb5eb")
+      .attr("stroke", "hsl(var(--custom_cyan))")
       .attr("stroke-width", 2.5)
       .attr("opacity", 0.9)
       .attr("d", line);
@@ -143,12 +143,16 @@ export default function FeeImpactChart() {
   }, [dimensions, expectedReturn, managementFee]);
 
   return (
-    <div className="w-full space-y-8 p-4 bg-black/40 rounded-lg">
+    <div className="w-full space-y-8 p-4  rounded-lg">
       <div className="space-y-6">
+
+        <div ref={containerRef} className="w-full flex justify-center items-center">
+          <svg ref={svgRef} />
+        </div>
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-white">Förväntad avkastning</label>
-            <span className="text-sm text-cyan-400">{expectedReturn}%</span>
+            <label className="text-sm font-medium ">Förväntad avkastning</label>
+            <span className="text-sm ">{expectedReturn}%</span>
           </div>
           <Slider 
             value={[expectedReturn]}
@@ -161,8 +165,8 @@ export default function FeeImpactChart() {
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-white">Fond avgift</label>
-            <span className="text-sm text-cyan-400">{managementFee}%</span>
+            <label className="text-sm font-medium">Fond avgift</label>
+            <span className="text-sm ">{managementFee}%</span>
           </div>
           <Slider 
             value={[managementFee]}
@@ -173,14 +177,14 @@ export default function FeeImpactChart() {
           />
         </div>
 
-        <div className="text-sm text-cyan-400 font-medium">
+        {/* <div className="text-sm text-cyan-400 font-medium">
           Net Annual Return: {(expectedReturn - managementFee).toFixed(1)}%
         </div>
+        */}
+
       </div>
 
-      <div ref={containerRef} className="w-full flex justify-center items-center">
-        <svg ref={svgRef} />
-      </div>
+
     </div>
   );
 }

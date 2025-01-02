@@ -43,16 +43,11 @@ export default function AssetCountChart() {
         const data = await getAssetCount();
         const slicedData = data.slice(0, 10); 
         setDataSeries(slicedData);
-        console.log("Fetched data:", data);
     };
 
     const drawChart = () => {
         if (!dataSeries.length || !svgRef.current || !containerRef.current) return;
-    
-        // Log the data to see the full structure
-        dataSeries.forEach(d => {
-            console.log("Checking Data:", d);
-        });
+
     
         d3.select(svgRef.current).selectAll("*").remove();
     
@@ -94,12 +89,12 @@ export default function AssetCountChart() {
             .attr("class", "tooltip")
             .style("position", "absolute")
             .style("visibility", "hidden")
-            .style("background", "rgba(0, 0, 0, 0.9)")
-            .style("color", "white")
+            .style("background", "hsl(var(--inverse_foreground))")
+            .style("color", "hsl(var(--foreground))")
             .style("padding", "8px")
             .style("border-radius", "8px")
-            .style("border", "1px solid rgba(255, 255, 255, 0.2)")
-            .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 255, 255, 0.2)")
+            .style("border", `1px solid hsl(var(--foreground) / 0.2)`)
+            .style("box-shadow", "0 4px 6px hsl(var(--foreground) / 0.1), 0 0 8px hsl(var(--custom_cyan) / 0.3)")
             .style("font-size", "12px")
             .style("backdrop-filter", "blur(4px)")
             .style("z-index", "1000")
@@ -126,17 +121,11 @@ export default function AssetCountChart() {
             .on("mouseover", (event, d) => {
                 tooltip
                     .html(`
-                        <strong>ISIN:</strong> ${d.isin_kod || 'No ISIN'}<br/>
-                        <strong>Count:</strong> ${d.count.toLocaleString()}<br/>
-                        <strong>Name:</strong><br/>
-                        ${d.fondnames && d.fondnames.length > 0 ? d.fondnames.slice(0, 5).map(name => `- ${name}`).join("<br/>") : 'No Name'}
-                    `)
-                    .html(`
                         <div class="font-bold mb-1">${d.fondnames[0]}</div>
-                        <div class="text-cyan-300">Antal: ${d.count.toLocaleString()}</div>
-                        <div class="text-cyan-300">Namn: <br/>
+                        <div style="color: hsl(var(--custom_cyan))">Antal: ${d.count.toLocaleString()}</div>
+                        <div style="color: hsl(var(--custom_cyan))">Namn: <br/>
                         ${d.fondnames && d.fondnames.length > 0 ? d.fondnames.slice(0, 3).map(name => `- ${name}`).join("<br/>") : 'No Name'}</div>
-                        <div class="text-xs mt-1 text-gray-300">${d.isin_kod}</div>
+                        <div style="color:hsl(var(--muted-foreground))" class="text-xs mt-1">${d.isin_kod}</div>
                       `)
                     .style("visibility", "visible");
         
@@ -148,7 +137,7 @@ export default function AssetCountChart() {
                     .transition()
                     .duration(200)
                     .style("opacity", 1)
-                    .attr("stroke", "#1f2937")
+                    .attr("stroke", "hsl(var(--background)")
                     .attr("stroke-width", 3);
             })
             .on("mousemove", (event) => {
@@ -166,7 +155,7 @@ export default function AssetCountChart() {
             })
             // Apply transition only here
             .transition()
-            .duration(800)
+            .duration(700)
             .attr("width", d => x(d.count));  // Transition from 0 to final width
         
     
@@ -180,12 +169,12 @@ export default function AssetCountChart() {
                 return (y(fondName) || 0) + y.bandwidth() / 2;  // Use fallback if y(fondName) is undefined
             })
             .attr("dy", ".35em")
-            .attr("fill", "#ffffff")
+            .attr("fill", "hsl(var(--text)")
             .style("font-size", "12px")
             .style("opacity", 0)
-            .text(d => `${d.fondnames[0] || 'No ISIN'}: ${d.count.toLocaleString()}`)
+            .text(d => `${d.fondnames[0] || 'No ISIN'} i ${d.count.toLocaleString()} fonder`)
             .transition()
-            .duration(800)
+            .duration(700)
             .style("opacity", 1);
     };
     

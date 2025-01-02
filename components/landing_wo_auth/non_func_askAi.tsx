@@ -33,7 +33,7 @@ const AskAInonfunc = () => {
 
   return (
     <div className="space-y-4 sm:px-0">
-      <Card className="sm:max-w-4xl mx-auto w-full">
+      <Card className="sm:max-w-5xl mx-auto w-full">
         <CardHeader className="relative">
           <div className="flex justify-center">
             <CardTitle className="text-2xl font-bold">

@@ -38,7 +38,6 @@ export default function Branchchart() {
       return acc;
     }, {});
 
-    console.log(groupedData);
     // Format the data to the expected structure
     const formattedData = Object.entries(groupedData).map(([quarter, data]) => ({
       name: quarter,

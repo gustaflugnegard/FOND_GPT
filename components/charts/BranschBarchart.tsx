@@ -15,6 +15,8 @@ export default function BranschCountChart() {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [dataSeries, setDataSeries] = useState<CountData[]>([]);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
 
     const resizeTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -43,7 +45,6 @@ export default function BranschCountChart() {
         const data = await getBranschCount();
         const slicedData = data.slice(0, 15); 
         setDataSeries(slicedData);
-        console.log("Fetched data:", data);
     };
 
     const drawChart = () => {
@@ -51,7 +52,6 @@ export default function BranschCountChart() {
     
         // Log the data to see the full structure
         dataSeries.forEach(d => {
-            console.log("Checking Data:", d);
         });
     
         d3.select(svgRef.current).selectAll("*").remove();
@@ -78,77 +78,92 @@ export default function BranschCountChart() {
             .range([0, height])
             .padding(0.1); // Space between bars
     
-        //const neonColors = [
-        //    '#1b7895',
-        //    '#eeb5eb',
-        //    '#ffd864',
-        //    '#61c2a2',
-        //    '#fff'
-        //];
-    
-        //const colorScale = d3.scaleOrdinal()
-            //.domain(dataSeries.map(d => d.sektorer || 'No ISIN')) // Handle missing ISIN_kod
-            //.range(neonColors);
 
-        // Create color scale
         const colorScale = d3.scaleOrdinal()
-            .domain(dataSeries.map(d => d.sektorer))
+            .domain(dataSeries.map(d => d.percentage))
             .range(d3.range(0, 1, 1 / dataSeries.length).map(d => d3.rgb(0, 255, 255).darker(1 + d * 2)));
-    
+
+                // Improved text truncation function with more precise calculations
+        const truncateText = (text: string, barWidth: number, fontSize: number = 12) => {
+            // If bar is too small to show any text (e.g., less than 30px), return empty string
+            if (barWidth < 30) return '';
+            
+            const textElement = chart.append("text")
+                .attr("visibility", "hidden")
+                .style("font-size", `${fontSize}px`)
+                .text(text);
+            
+            const textWidth = textElement.node()?.getComputedTextLength() || 0;
+            textElement.remove();
+            
+            if (textWidth > barWidth - 20) {
+                const charactersPerPixel = text.length / textWidth;
+                const maxChars = Math.floor((barWidth - 20) * charactersPerPixel);
+                // If we can't fit at least 3 characters plus ellipsis, return empty string
+                if (maxChars < 4) return '';
+                return text.slice(0, maxChars - 3) + "...";
+            }
+            return text;
+        };
+
         const tooltip = d3.select("body")
             .append("div")
             .attr("class", "tooltip")
             .style("position", "absolute")
             .style("visibility", "hidden")
-            .style("background", "rgba(0, 0, 0, 0.9)")
-            .style("color", "white")
+            .style("background", "hsl(var(--inverse_foreground))")
+            .style("color", "hsl(var(--foreground))")
             .style("padding", "8px")
             .style("border-radius", "8px")
-            .style("border", "1px solid rgba(255, 255, 255, 0.2)")
-            .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 255, 255, 0.2)")
+            .style("border", `1px solid hsl(var(--foreground) / 0.2)`)
+            .style("box-shadow", "0 4px 6px hsl(var(--foreground) / 0.1), 0 0 8px hsl(var(--custom_cyan) / 0.3)")
             .style("font-size", "12px")
             .style("backdrop-filter", "blur(4px)")
             .style("z-index", "1000")
             .style("pointer-events", "none")
             .style("transition", "opacity 0.2s ease-in-out");
-    
-            chart.selectAll(".bar")
-            .data(dataSeries)
-            .join("rect")
+
+                    // Create group for each bar and its label
+        const barGroups = chart.selectAll(".bar-group")
+        .data(dataSeries)
+        .join("g")
+        .attr("class", "bar-group")
+        .attr("transform", d => `translate(0,${y(d.sektorer) || 0})`);
+
+        // Add bars
+        const bars = barGroups.append("rect")
             .attr("class", "bar")
             .attr("x", 0)
-            .attr("y", d => y(d.sektorer) || 0)
-            .attr("height", y.bandwidth()) // Ensure bars have height according to the y scale
+            .attr("y", 0)
+            .attr("height", y.bandwidth())
             .attr("rx", 4)
             .attr("ry", 4)
-            .attr("fill", d => colorScale(d.sektorer || 'No ISIN'))
+            .attr("fill", d => colorScale(d.percentage))
             .style("opacity", 0.9)
-            // Do not set width here, allow the transition to handle it
+            .attr("width", 0)
             .on("mouseover", (event, d) => {
                 tooltip
-                    .html(`${d.sektorer}: ${d.percentage.toFixed(2)}%`)
                     .html(`
-                        <div class="font-bold mb-1">${d.sektorer}: ${d.percentage.toFixed(2)}%</div>
-                      `)
-
-
+                        <div class="font-bold mb-1">${d.sektorer}</div>
+                        <div style="color: hsl(var(--custom_cyan))">Andel: ${d.percentage.toFixed(2)}%</div>
+                    `)
                     .style("visibility", "visible");
-        
+
                 tooltip
-                    .style("left", `${event.pageX + 10}px`)
-                    .style("top", `${event.pageY - 10}px`);
-        
+                    .style("left", `${event.clientX + window.scrollX + 10}px`)
+                    .style("top", `${event.clientY + window.scrollY - 10}px`);
+
                 d3.select(event.target)
                     .transition()
                     .duration(200)
                     .style("opacity", 1)
-                    .attr("stroke", "#1f2937")
-                    .attr("stroke-width", 3);
+                    .attr("stroke", "hsl(var(--background)")
+                    .attr("stroke-width", 4);
             })
             .on("mousemove", (event) => {
                 tooltip
-                    .style("left", `${event.pageX + 10}px`)
-                    .style("top", `${event.pageY - 10}px`);
+                    .style("left", `${event.clientX + window.scrollX + 10}px`)
+                    .style("top", `${event.clientY + window.scrollY - 10}px`);
             })
             .on("mouseout", (event) => {
                 tooltip.style("visibility", "hidden");
@@ -157,30 +172,37 @@ export default function BranschCountChart() {
                     .duration(200)
                     .style("opacity", 0.9)
                     .attr("stroke", "none");
-            })
-            // Apply transition only here
-            .transition()
-            .duration(800)
-            .attr("width", d => x(d.percentage));  // Transition from 0 to final width
-        
+            });
     
-        chart.selectAll(".label")
-            .data(dataSeries)
-            .join("text")
+        // Add labels with truncation
+        const labels = barGroups.append("text")
             .attr("class", "label")
-            .attr("x", 5)
-            .attr("y", d => {
-                const fondName = d.sektorer || 'No Name'; // Safely access the first name or fallback
-                return (y(fondName) || 0) + y.bandwidth() / 2;  // Use fallback if y(fondName) is undefined
-            })
+            .attr("x", 10)
+            .attr("y", y.bandwidth() / 2)
             .attr("dy", ".35em")
-            .attr("fill", "#ffffff")
+            .attr("fill", "hsl(var(--text))")
             .style("font-size", "12px")
-            .style("opacity", 0)
-            .text(d => `${d.sektorer || 'No ISIN'}: ${d.percentage.toFixed(2)}%`)
-            .transition()
-            .duration(800)
-            .style("opacity", 1);
+
+            .style("opacity", 0);
+
+        // Animate bars and update labels simultaneously
+        bars.transition()
+            .duration(700)
+            .attr("width", d => x(d.percentage))
+            .on("start", function(d) {
+                const barWidth = x(d.percentage);
+                const labelText = `${d.sektorer === "Energi" ? "" : d.sektorer}: ${d.percentage.toFixed(2)}%`;
+                const truncatedText = truncateText(labelText, barWidth);
+                
+                d3.select(this.parentNode)
+                    .select("text")
+                    .text(truncatedText)
+                    .transition()
+                    .duration(700)
+                    .style("opacity", 1);
+            });
+
+
     };
     
     
@@ -190,7 +212,16 @@ export default function BranschCountChart() {
 
     useEffect(() => {
         if (dataSeries.length > 0) {
-            drawChart();
+            if (isInitialLoad) {
+                const timeoutId = setTimeout(() => {
+                    drawChart();
+                    setIsInitialLoad(false); // Ensure the pause happens only once
+                }, 300); // 500ms pause for the first load
+
+                return () => clearTimeout(timeoutId);
+            } else {
+                drawChart(); // No pause on subsequent updates
+            }
         }
     }, [dataSeries, dimensions]);
 

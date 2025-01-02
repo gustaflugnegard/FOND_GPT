@@ -12,23 +12,31 @@ import LineChartContainer from "@/components/charts/containers/assetchartcontain
 
 import AvgiftChartContainer from "@/components/charts/containers/avgiftcontainer";
 
-import FeeImpactChart from "@/components/charts/LineChart_avgift";
 
 export default async function Index() {
   return (
     <>
       <main className="mt-2">
         <AskAInonfunc />
-        <div className="flex justify-between space-x-4 sm:max-w-4xl mx-auto w-full">
-          <AssetChartContainer />
-          <AssetCountContainer />
+        
+        <div className="flex flex-col lg:flex-row lg:flex-wrap justify-between max-w-5xl mx-auto w-full">
+          <div className="w-full lg:w-[calc(50%-1rem)]">
+            <AssetChartContainer />
+          </div>
+          <div className="w-full lg:w-[calc(50%-1rem)]">
+            <AssetCountContainer />
+          </div>
         </div>
 
         < MapChartContainer />
 
-        <div className="flex justify-between space-x-4 sm:max-w-4xl mx-auto w-full">
-          <SectorChartContainer />
-          <AvgiftChartContainer />
+        <div className="flex flex-col lg:flex-row lg:flex-wrap justify-between max-w-5xl mx-auto w-full">
+          <div className="w-full lg:w-[calc(50%-1rem)]">
+            <SectorChartContainer />
+          </div>
+          <div className="w-full lg:w-[calc(50%-1rem)]">
+            <AvgiftChartContainer />
+          </div>
         </div>
 
         < LineChartContainer />

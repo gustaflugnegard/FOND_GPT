@@ -18,6 +18,8 @@ export default function Fondbarchart() {
         width: 0,
         height: 0,
     });
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
 
     const resizeTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -69,7 +71,9 @@ export default function Fondbarchart() {
             .slice(0, 10);
 
         setDataSeries(transformedData);
+        setIsInitialLoad(true); // Mark as initial load
     };
+
 
     const drawChart = () => {
         if (!dataSeries.length || !svgRef.current || !containerRef.current) return;
@@ -96,34 +100,57 @@ export default function Fondbarchart() {
             .range([0, height])
             .padding(0.1);
 
-        // Create color scale
         const colorScale = d3.scaleOrdinal()
             .domain(dataSeries.map(d => d.fond))
             .range(d3.range(0, 1, 1 / dataSeries.length).map(d => d3.rgb(0, 255, 255).darker(1 + d * 2)));
+
+        // Improved text truncation function with more precise calculations
+        const truncateText = (text: string, barWidth: number, fontSize: number = 12) => {
+            const textElement = chart.append("text")
+                .attr("visibility", "hidden")
+                .style("font-size", `${fontSize}px`)
+                .text(text);
+            
+            const textWidth = textElement.node()?.getComputedTextLength() || 0;
+            textElement.remove();
+            
+            if (textWidth > barWidth - 20) { // 20px total padding (10px on each side)
+                const charactersPerPixel = text.length / textWidth;
+                const maxChars = Math.floor((barWidth - 20) * charactersPerPixel);
+                return text.slice(0, maxChars - 3) + "...";
+            }
+            return text;
+        };
 
         const tooltip = d3.select("body")
             .append("div")
             .attr("class", "tooltip")
             .style("position", "absolute")
             .style("visibility", "hidden")
-            .style("background", "rgba(0, 0, 0, 0.9)")
-            .style("color", "white")
+            .style("background", "hsl(var(--inverse_foreground))")
+            .style("color", "hsl(var(--foreground))")
             .style("padding", "8px")
             .style("border-radius", "8px")
-            .style("border", "1px solid rgba(255, 255, 255, 0.2)")
-            .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 255, 255, 0.2)")
+            .style("border", `1px solid hsl(var(--foreground) / 0.2)`)
+            .style("box-shadow", "0 4px 6px hsl(var(--foreground) / 0.1), 0 0 8px hsl(var(--custom_cyan) / 0.3)")
             .style("font-size", "12px")
             .style("backdrop-filter", "blur(4px)")
             .style("z-index", "1000")
             .style("pointer-events", "none")
             .style("transition", "opacity 0.2s ease-in-out");
 
-        chart.selectAll(".bar")
+        // Create group for each bar and its label
+        const barGroups = chart.selectAll(".bar-group")
             .data(dataSeries)
-            .join("rect")
+            .join("g")
+            .attr("class", "bar-group")
+            .attr("transform", d => `translate(0,${y(d.fond) || 0})`);
+
+        // Add bars
+        const bars = barGroups.append("rect")
             .attr("class", "bar")
             .attr("x", 0)
-            .attr("y", d => y(d.fond) || 0)
+            .attr("y", 0)
             .attr("height", y.bandwidth())
             .attr("rx", 4)
             .attr("ry", 4)
@@ -134,9 +161,9 @@ export default function Fondbarchart() {
                 tooltip
                     .html(`
                         <div class="font-bold mb-1">${d.fond}</div>
-                        <div class="text-cyan-300">Avkastning: ${d.oneyear.toFixed(1)}%</div>
-                        <div class="text-xs mt-1 text-gray-300">${d.bolag}</div>
-                      `)
+                        <div style="color: hsl(var(--custom_cyan))">Avkastning: ${d.oneyear.toFixed(1)}%</div>
+                        <div style="color:hsl(var(--muted-foreground))" class="text-xs mt-1">${d.bolag}</div>
+                    `)
                     .style("visibility", "visible");
 
                 tooltip
@@ -147,8 +174,8 @@ export default function Fondbarchart() {
                     .transition()
                     .duration(200)
                     .style("opacity", 1)
-                    .attr("stroke", "#1f2937")
-                    .attr("stroke-width", 3);
+                    .attr("stroke", "hsl(var(--background)")
+                    .attr("stroke-width", 4);
             })
             .on("mousemove", (event) => {
                 tooltip
@@ -162,41 +189,66 @@ export default function Fondbarchart() {
                     .duration(200)
                     .style("opacity", 0.9)
                     .attr("stroke", "none");
-            })
-            .transition()
-            .duration(800)
-            .attr("width", d => x(d.oneyear));
+            });
 
-        chart.selectAll(".label")
-            .data(dataSeries)
-            .join("text")
+        // Add labels with truncation
+        const labels = barGroups.append("text")
             .attr("class", "label")
-            .attr("x", 5)
-            .attr("y", d => (y(d.fond) || 0) + y.bandwidth() / 2)
+            .attr("x", 10)
+            .attr("y", y.bandwidth() / 2)
             .attr("dy", ".35em")
-            .attr("fill", "#ffffff")
+            .attr("fill", "hsl(var(--text))")
             .style("font-size", "12px")
-            .style("opacity", 0)
-            .text(d => `${d.fond}: ${d.oneyear.toLocaleString()}%`)
-            .transition()
-            .duration(800)
-            .style("opacity", 1);
-    };
 
+            .style("opacity", 0);
+
+        // Animate bars and update labels simultaneously
+        bars.transition()
+            .duration(700)
+            .attr("width", d => x(d.oneyear))
+            .on("start", function(d) {
+                const barWidth = x(d.oneyear);
+                const labelText = `${d.fond === "Unknown Asset" ? d.bolag : d.fond}: ${d.oneyear.toLocaleString()}%`;
+                const truncatedText = truncateText(labelText, barWidth);
+                
+                d3.select(this.parentNode)
+                    .select("text")
+                    .text(truncatedText)
+                    .transition()
+                    .duration(700)
+                    .style("opacity", 1);
+            });
+
+
+    };
+    
     useEffect(() => {
         fetchData();
     }, []);
 
     useEffect(() => {
         if (dataSeries.length > 0) {
-            drawChart();
+            if (isInitialLoad) {
+                const timeoutId = setTimeout(() => {
+                    drawChart();
+                    setIsInitialLoad(false); // Ensure the pause happens only once
+                }, 300); // 500ms pause for the first load
+
+                return () => clearTimeout(timeoutId);
+            } else {
+                drawChart(); // No pause on subsequent updates
+            }
         }
     }, [dataSeries, dimensions]);
 
     return (
         <div ref={containerRef} className="sm:max-w-4xl mx-auto w-full">
             <div className="w-full h-full">
-                <svg ref={svgRef} className="w-full h-full" />
+                <svg ref={svgRef} 
+                className="w-full h-full" 
+                style={{ minWidth: "400px" }}
+
+                />
             </div>
         </div>
     );

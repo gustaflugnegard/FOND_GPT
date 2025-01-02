@@ -6,6 +6,12 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --inverse_foreground: 210 40% 98%;
+    --custom_cyan: 180 100% 35%; /* Base cyan */
+    --text: 210 40% 98%;
+    --border_map: 222.2 84% 4.9%;
+
+
  
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -38,6 +44,13 @@
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+    --inverse_foreground: 222.2 84% 4.9%;
+    --custom_cyan: 180 100% 45%; /* Base cyan */
+    --text: 210 40% 98%;
+    --border_map: 210 40% 4.9%;
+
+
+
  
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;

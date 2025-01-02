@@ -14,13 +14,15 @@ export default function BranschCountChart() {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [dataSeries, setDataSeries] = useState<CountData[]>([]);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
     
     const resizeTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const updateDimensions = () => {
         if (containerRef.current) {
             const containerWidth = containerRef.current.getBoundingClientRect().width;
-            const containerHeight = Math.min(Math.max(containerWidth * 0.6, 400), 800);
+            const containerHeight = Math.min(Math.max(containerWidth * 0.9, 450), 350);
             setDimensions({ width: containerWidth, height: containerHeight });
         }
     };
@@ -99,7 +101,7 @@ export default function BranschCountChart() {
             .attr("ry", 4)
             .style("opacity", 0.9)
             .transition()
-            .duration(800)
+            .duration(700)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => d.y1 - d.y0);
 
@@ -129,12 +131,12 @@ export default function BranschCountChart() {
                     .attr("x", 4)
                     .attr("y", rectHeight / 2 - nameFontSize)
                     .attr("font-size", `${nameFontSize}px`)
-                    .attr("fill", "#ffffff")
+                    .attr("fill", "hsl(var(--text))")
                     .style("font-weight", "500")
                     .style("opacity", 0)
                     .text(truncatedName)
                     .transition()
-                    .duration(800)
+                    .duration(700)
                     .style("opacity", 1);
 
                 // Percentage text
@@ -143,11 +145,11 @@ export default function BranschCountChart() {
                     .attr("x", 4)
                     .attr("y", rectHeight / 2 + valueFontSize/2)
                     .attr("font-size", `${valueFontSize}px`)
-                    .attr("fill", "#ffffff")
+                    .attr("fill", "hsl(var(--text))")
                     .style("opacity", 0)
                     .text(`${d.data.value.toFixed(1)}%`)
                     .transition()
-                    .duration(800)
+                    .duration(700)
                     .style("opacity", 1);
             }
         });
@@ -158,12 +160,12 @@ export default function BranschCountChart() {
             .attr("class", "tooltip")
             .style("position", "absolute")
             .style("visibility", "hidden")
-            .style("background", "rgba(0, 0, 0, 0.9)")
-            .style("color", "white")
+            .style("background", "hsl(var(--inverse_foreground))")
+            .style("color", "hsl(var(--foreground))")
             .style("padding", "8px")
             .style("border-radius", "8px")
-            .style("border", "1px solid rgba(255, 255, 255, 0.2)")
-            .style("box-shadow", "0 4px 6px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 255, 255, 0.2)")
+            .style("border", `1px solid hsl(var(--foreground) / 0.2)`)
+            .style("box-shadow", "0 4px 6px hsl(var(--foreground) / 0.1), 0 0 8px hsl(var(--custom_cyan) / 0.3)")
             .style("font-size", "12px")
             .style("backdrop-filter", "blur(4px)")
             .style("z-index", "1000")
@@ -176,12 +178,13 @@ export default function BranschCountChart() {
                     .transition()
                     .duration(200)
                     .style("opacity", 1)
-                    .attr("stroke", "#1f2937")
+                    .attr("stroke", "hsl(var(--background)")
                     .attr("stroke-width", 3);
 
                 tooltip.style("visibility", "visible")
                     .html(`
-                        <div class="font-bold mb-1">${d.data.name}: ${d.data.value.toFixed(2)}%</div>
+                        <div class="font-bold mb-1">${d.data.name}</div>
+                        <div style="color: hsl(var(--custom_cyan))">Andel: ${d.data.value.toFixed(2)}%</div>
                       `)
             })
             .on("mousemove", (event) => {
@@ -205,7 +208,16 @@ export default function BranschCountChart() {
 
     useEffect(() => {
         if (dataSeries.length > 0) {
-            drawChart();
+            if (isInitialLoad) {
+                const timeoutId = setTimeout(() => {
+                    drawChart();
+                    setIsInitialLoad(false); // Ensure the pause happens only once
+                }, 300); // 500ms pause for the first load
+
+                return () => clearTimeout(timeoutId);
+            } else {
+                drawChart(); // No pause on subsequent updates
+            }
         }
     }, [dataSeries, dimensions]);
 
