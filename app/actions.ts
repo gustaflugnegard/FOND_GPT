@@ -137,9 +137,10 @@ export const signOutAction = async () => {
 };
 
 export const signInWithGoogle = async () => {
-  
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
+
+  const redirectTo = "/protected"; // Define the protected route here
 
   // Request Google OAuth URL
   const {
@@ -148,21 +149,20 @@ export const signInWithGoogle = async () => {
   } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback`,  // Redirect URL after OAuth
+      redirectTo: `${origin}/auth/callback?redirect_to=${encodeURIComponent(redirectTo)}`,
     },
   });
 
-  // If there's an error or the URL is not returned, handle it
   if (error || !url) {
     return redirect("/login?message=Could not authenticate user");
   }
 
-  // Set the 'lastSignedInMethod' cookie before redirecting
-  const cookieJar = await cookies();  // Ensure this is executed server-side
-  cookieJar.set("lastSignedInMethod", "google");  // Setting the cookie
+  // Set the 'lastSignedInMethod' cookie
+  const cookieJar = await cookies();
+  cookieJar.set("lastSignedInMethod", "google");
 
-  // Perform the redirect to Google's OAuth page
-  return redirect(url);  // Redirects to Google OAuth
+  return redirect(url);
 };
+
 
 
