@@ -1,8 +1,6 @@
-'use client';
+"use client";
 
-import { signInAction } from "@/app/actions";
-import { signInWithGoogle } from "@/app/actions";
-import { FormMessage } from "@/components/form-message";
+import { signInAction, signInWithGoogle } from "@/app/actions";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,11 +10,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { InfoIcon } from "lucide-react";
 
 function LoginContent() {
   const [lastSignedInMethod, setLastSignedInMethod] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const message = searchParams?.get("message") ? JSON.parse(searchParams.get("message")!) : null;
+  const error = searchParams?.get("error") 
+  ? decodeURIComponent(searchParams.get("error")!) 
+  : null;
 
   // Read cookies on client-side
   useEffect(() => {
@@ -29,10 +30,17 @@ function LoginContent() {
   }, []);
 
   return (
-    <div className="container flex items-center justify-center min-h-screen py-12">
+    <div className="container flex flex-col items-center justify-center min-h-screen py-12 space-y-4">
+    {error && (
+      <div className="bg-accent text-sm p-2 px-5 rounded-md text-foreground flex gap-2 items-center justify-center w-auto">
+        <InfoIcon size="16" strokeWidth={2} />
+        <span>{error}</span>
+      </div>
+    )}
+
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl font-semibold text-center">Logga in</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form className="space-y-4" action={signInAction}>
@@ -49,30 +57,30 @@ function LoginContent() {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Lösenord</Label>
                 <Link
                   className="text-xs text-muted-foreground hover:text-primary transition-colors"
                   href="/forgot-password"
                 >
-                  Forgot Password?
+                  Glömt Lösenord?
                 </Link>
               </div>
               <Input
                 id="password"
                 type="password"
                 name="password"
-                placeholder="Your password"
+                placeholder="Ditt lösenord"
                 required
                 autoComplete="current-password"
               />
             </div>
             <div className="relative">
               <SubmitButton className="w-full">
-                Sign in
+                Logga in
                 {lastSignedInMethod === "email" && (
                   <div className="absolute top-1/2 -translate-y-1/2 left-full whitespace-nowrap ml-8 bg-accent px-4 py-1 rounded-md text-xs text-foreground/80">
                     <div className="absolute -left-5 top-0 border-background border-[12px] border-r-accent" />
-                    Last used
+                    Senast använd
                   </div>
                 )}
               </SubmitButton>
@@ -84,7 +92,7 @@ function LoginContent() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">Eller fortsätt med</span>
             </div>
           </div>
 
@@ -97,23 +105,21 @@ function LoginContent() {
                 height={20}
                 className="mr-2"
               />
-              Sign in with Google
+              Logga in med Google
               {lastSignedInMethod === "google" && (
                 <div className="absolute top-1/2 -translate-y-1/2 left-full whitespace-nowrap ml-8 bg-accent px-4 py-1 rounded-md text-xs text-foreground/80">
                   <div className="absolute -left-5 top-0 border-background border-[12px] border-r-accent" />
-                  Last used
+                  Senast använd
                 </div>
               )}
             </SubmitButton>
           </form>
-
-          {message && <FormMessage message={message} />}
         </CardContent>
         <CardFooter>
           <p className="text-sm text-center text-muted-foreground w-full">
-            Don't have an account?{" "}
+            Saknar du ett konto?{" "}
             <Link className="font-medium text-primary hover:underline" href="/sign-up">
-              Sign up
+              Skapa ett konto
             </Link>
           </p>
         </CardFooter>

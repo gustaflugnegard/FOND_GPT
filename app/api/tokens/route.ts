@@ -15,8 +15,6 @@ export async function GET() {
     const userId = user.id;
     const tokens = await getUserTokens(userId); // Fetch tokens using user ID
 
-    console.log("Fetched tokens:", tokens);
-
     return NextResponse.json({ tokens }); // Return valid JSON response
   } catch (error) {
     console.error('API Error:', error);

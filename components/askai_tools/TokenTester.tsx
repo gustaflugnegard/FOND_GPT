@@ -125,11 +125,11 @@ const TokenTester = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto mt-4">
       <CardHeader>
-        <CardTitle>Token Management Tester</CardTitle>
+        <CardTitle className='text-center'>Token Management Tester</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2">
         {error && (
           <div className="p-3 rounded bg-red-100 text-red-700">
             Error: {error}
@@ -144,7 +144,7 @@ const TokenTester = () => {
           )}
         </div>
 
-        <div className="space-y-2">
+        {/*<div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Test Text Input
           </label>
@@ -158,11 +158,11 @@ const TokenTester = () => {
           <div className="text-sm text-gray-600">
             Estimated tokens: {estimatedTokens}
           </div>
-        </div>
+        </div> */}
 
         <div className="flex gap-4 justify-center">
           <Button
-            onClick={() => handleTokenOperation('add', 5)}
+            onClick={() => handleTokenOperation('add', 10)}
             disabled={loading}
             className="bg-green-600 hover:bg-green-700"
           >
@@ -177,13 +177,13 @@ const TokenTester = () => {
             Deduct 10 Tokens
           </Button>
 
-          <Button
+          {/*<Button
             onClick={handleAsk}
             disabled={loading || !inputText.trim() || (tokens !== null && estimatedTokens > tokens)}
             className="bg-blue-600 hover:bg-blue-700"
           >
             Ask
-          </Button>
+          </Button> */}
         </div>
       </CardContent>
     </Card>

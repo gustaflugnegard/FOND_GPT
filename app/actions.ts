@@ -29,6 +29,14 @@ export const signUpAction = async (formData: FormData) => {
 
   if (error) {
     console.error(error.code + " " + error.message);
+    // Check specifically for the user exists error
+    if (error.message.toLowerCase().includes('user already registered')) {
+      return encodedRedirect(
+        "error",
+        "/sign-up",
+        "This email is already registered. Please use a different email or try logging in."
+      );
+    }
     return encodedRedirect("error", "/sign-up", error.message);
   } else {
     return encodedRedirect(
@@ -154,7 +162,7 @@ export const signInWithGoogle = async () => {
   });
 
   if (error || !url) {
-    return redirect("/login?message=Could not authenticate user");
+    return encodedRedirect("error", "/login", "Could not authenticate user");
   }
 
   // Set the 'lastSignedInMethod' cookie
