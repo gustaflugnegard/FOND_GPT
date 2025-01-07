@@ -162,7 +162,7 @@ const TokenTester = () => {
 
         <div className="flex gap-4 justify-center">
           <Button
-            onClick={() => handleTokenOperation('add', 10)}
+            onClick={() => handleTokenOperation('add', 15)}
             disabled={loading}
             className="bg-green-600 hover:bg-green-700"
           >
