@@ -11,11 +11,10 @@ interface CountryData {
   percentage: number;
 }
 
-interface MapFeature {
-  properties: {
-    iso_a2: string;
-  };
-}
+type MapFeature = GeoJSON.Feature<GeoJSON.Geometry, {
+  iso_a2: string;
+  [key: string]: any; // for other properties
+}>;
 
 
 export default function Map() {
@@ -55,7 +54,11 @@ export default function Map() {
 
   // Memoized calculations
   const { colorScale, projection, path } = useMemo(() => {
-    if (!dataSeries.length) return {};
+    if (!dataSeries.length) return {} as {
+      colorScale: d3.ScaleSequential<string>;
+      projection: d3.GeoProjection;
+      path: d3.GeoPath;
+    };
 
     const maxCount = d3.max(dataSeries, d => d.count) || 1;
     const colorScale = d3.scaleSequential()
@@ -63,7 +66,7 @@ export default function Map() {
       .interpolator(d3.interpolateHcl("#008080", "cyan"));
 
     const projection = d3.geoEqualEarth()
-      .fitSize([dimensions.width, dimensions.height], mapContent);
+    .fitSize([dimensions.width, dimensions.height], mapContent as d3.ExtendedFeatureCollection);
 
     const path = d3.geoPath().projection(projection);
 
@@ -121,52 +124,47 @@ export default function Map() {
     const svg = d3.select(svgRef.current);
     const g = d3.select(gRef.current);
     const tooltip = tooltipRef.current;
-  
-    // Setup zoom behavior
-    const zoom = d3.zoom()
+    
+    // Define the zoom behavior with proper typing
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 6])
       .on("zoom", (event) => {
         g.attr("transform", event.transform);
-        // Update stroke width for all paths during zoom
         g.selectAll("path").style("stroke-width", `${1 / event.transform.k}px`);
       });
-  
+
+    // Apply zoom to svg
     svg.call(zoom);
-    
-    // Initial zoom for small screens
+
+    // Handle initial zoom based on screen size
+    const applyInitialZoom = (scale: number, translateY: number) => {
+      const transform = d3.zoomIdentity
+        .translate(dimensions.width / 2, dimensions.height / translateY)
+        .scale(scale)
+        .translate(-dimensions.width / 2, -dimensions.height / 2);
+
+      zoom.transform(svg, transform);
+      g.selectAll("path").style("stroke-width", `${1 / scale}px`);
+    };
+
     if (dimensions.width < 600) {
-      const transform = d3.zoomIdentity
-        .translate(dimensions.width / 2, dimensions.height / 1.4)
-        .scale(3)
-        .translate(-dimensions.width / 2, -dimensions.height / 2);
-      
-      svg.call(zoom.transform, transform);
-      // Set initial stroke width based on zoom level
-      g.selectAll("path").style("stroke-width", `${1 / 4}px`);
+      applyInitialZoom(3, 1.4);
     } else {
-      // Default zoom scale of 2 for larger screens
-      const transform = d3.zoomIdentity
-        .translate(dimensions.width / 2, dimensions.height / 1.1)
-        .scale(2)
-        .translate(-dimensions.width / 2, -dimensions.height / 2);
-      
-      svg.call(zoom.transform, transform);
-      g.selectAll("path").style("stroke-width", `${1 / 2}px`);
+      applyInitialZoom(2, 1.1);
     }
 
-    // Draw map features
     const paths = g.selectAll("path")
-      .data(mapContent.features)
-      .join("path")
-      .attr("d", path)
-      .attr("fill", (d: any) => {
-        const landkod = d.properties.iso_a2.toLowerCase();
-        const countryData = dataSeries.find(item => item.lander === landkod);
-        const count = countryData?.count || 0;
-        return count === 0 ? "grey" : colorScale(Math.log(count));
-      })
-      .attr("stroke", "hsl(var(--border_map))")
-      .attr("stroke-width", 0.5);
+    .data(mapContent.features as MapFeature[])
+    .join("path")
+    .attr("d", (d) => path(d))  
+    .attr("fill", (d) => {
+      const landkod = d.properties.iso_a2.toLowerCase();
+      const countryData = dataSeries.find(item => item.lander === landkod);
+      const count = countryData?.count || 0;
+      return count === 0 ? "grey" : colorScale(Math.log(count));
+    })
+    .attr("stroke", "hsl(var(--border_map))")
+    .attr("stroke-width", 0.5);
 
     // Handle interactions
     paths

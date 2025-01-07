@@ -2,7 +2,7 @@
 
 import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const signUpAction = async (formData: FormData) => {
@@ -52,6 +52,9 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
+
+  const cookieJar = await cookies();  // Correctly await cookies
+  cookieJar.set("lastSignedInMethod", "email");
 
   return redirect("/protected");
 };
@@ -132,3 +135,34 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/");
 };
+
+export const signInWithGoogle = async () => {
+  
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin");
+
+  // Request Google OAuth URL
+  const {
+    data: { url },
+    error,
+  } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback`,  // Redirect URL after OAuth
+    },
+  });
+
+  // If there's an error or the URL is not returned, handle it
+  if (error || !url) {
+    return redirect("/login?message=Could not authenticate user");
+  }
+
+  // Set the 'lastSignedInMethod' cookie before redirecting
+  const cookieJar = await cookies();  // Ensure this is executed server-side
+  cookieJar.set("lastSignedInMethod", "google");  // Setting the cookie
+
+  // Perform the redirect to Google's OAuth page
+  return redirect(url);  // Redirects to Google OAuth
+};
+
+

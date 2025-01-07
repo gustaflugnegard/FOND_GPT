@@ -129,7 +129,10 @@ export default function AvgiftBarChart() {
             .attr("height", y.bandwidth())
             .attr("rx", 4)
             .attr("ry", 4)
-            .attr("fill", d => colorScale(d.fond))
+            .attr("fill", (d: CountData): string => {
+                const color = colorScale(d.isin || 'No ISIN');
+                return (color ?? 'gray') as string;
+            })            
             .style("opacity", 0.9)
             .attr("width", 0)
             .on("mouseover", (event, d) => {
@@ -185,7 +188,7 @@ export default function AvgiftBarChart() {
                 const labelText = `${d.fond === "Unknown Asset" ? d.isin : d.fond}: ${d.avgift.toFixed(2)}%`;
                 const truncatedText = truncateText(labelText, barWidth);
                 
-                d3.select(this.parentNode)
+                d3.select(this.parentNode as Element)                    
                     .select("text")
                     .text(truncatedText)
                     .transition()

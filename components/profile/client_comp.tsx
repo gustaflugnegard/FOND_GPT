@@ -1,12 +1,31 @@
-'use client'; // This is necessary to make the component a client component
+'use client';
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/utils/supabase/server"; // Supabase client for client-side
+import { createClient } from "@/utils/supabase/server";
 
-function ProfileClientComponent({ user, profileData }) {
+// Define types for props
+interface User {
+  id: string;
+  email?: string
+  created_at? : Date 
+  // add other user properties you need
+}
+
+interface ProfileData {
+  display_name?: string;
+  profile_picture_url?: string;
+  // add other profile properties you need
+}
+
+interface ProfileClientComponentProps {
+  user: User;
+  profileData: ProfileData;
+}
+
+function ProfileClientComponent({ user, profileData }: ProfileClientComponentProps) {
   const [name, setName] = useState(profileData?.display_name || "");
-  const [file, setFile] = useState(null); // For profile picture upload
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -15,28 +34,34 @@ function ProfileClientComponent({ user, profileData }) {
     setErrorMessage("");
 
     try {
-      const supabase = createClient();
-
+      // Create and await the Supabase client
+      const supabase = await createClient();
       let profilePictureUrl = profileData?.profile_picture_url;
 
       if (file) {
         // Upload profile picture to Supabase Storage
         const { data, error: uploadError } = await supabase.storage
-          .from('avatars') // The storage bucket name
-          .upload(`public/${user?.id}/profile_picture.jpg`, file);
+          .from('avatars')
+          .upload(`public/${user.id}/profile_picture.jpg`, file);
 
         if (uploadError) throw uploadError;
 
         // Get public URL
-        profilePictureUrl = supabase.storage
+        const { data: urlData } = supabase.storage
           .from('avatars')
-          .getPublicUrl(`public/${user?.id}/profile_picture.jpg`).publicURL;
+          .getPublicUrl(`public/${user.id}/profile_picture.jpg`);
+        
+        profilePictureUrl = urlData.publicUrl;
       }
 
       // Update profile in the database
       const { error: updateError } = await supabase
         .from('profiles')
-        .upsert({ id: user?.id, display_name: name, profile_picture_url: profilePictureUrl });
+        .upsert({
+          id: user.id,
+          display_name: name,
+          profile_picture_url: profilePictureUrl
+        });
 
       if (updateError) throw updateError;
 
@@ -44,7 +69,7 @@ function ProfileClientComponent({ user, profileData }) {
       alert('Profile updated successfully!');
     } catch (error) {
       setLoading(false);
-      setErrorMessage(error.message || 'An error occurred while updating your profile.');
+      setErrorMessage(error instanceof Error ? error.message : 'An error occurred while updating your profile.');
     }
   };
 

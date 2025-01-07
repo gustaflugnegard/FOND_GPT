@@ -16,6 +16,7 @@ export default function LineChart() {
   const [dataSeries, setDataSeries] = useState<Record<string, CountData[]>>({});
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+
   const resizeTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const updateDimensions = () => {
@@ -51,7 +52,7 @@ export default function LineChart() {
       }, {});
 
       Object.keys(groupedData).forEach((key) => {
-        groupedData[key] = groupedData[key].sort((a, b) => new Date(a.Month).getTime() - new Date(b.Month).getTime());
+        groupedData[key] = groupedData[key].sort((a: CountData, b: CountData) => new Date(a.Month).getTime() - new Date(b.Month).getTime());
       });
 
       setDataSeries(groupedData);
@@ -109,7 +110,7 @@ export default function LineChart() {
     // Axes
     chart.append("g")
       .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y")))
+      .call(d3.axisBottom(x).tickFormat((d: Date | d3.NumberValue) => d3.timeFormat("%Y")(d as Date)))      
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")
@@ -137,7 +138,7 @@ export default function LineChart() {
       .attr("transform", `translate(0,0)`)
       .call(d3.axisLeft(y)
         .tickSize(-(dimensions.width - margin.right - margin.left))
-        .tickFormat("")
+        .tickFormat(() => "")
         .ticks(5)
       )
       .call(g => {
@@ -253,7 +254,7 @@ export default function LineChart() {
     // Append circles to legend items
     legendItems.append("circle")
       .attr("r", 5)
-      .attr("fill", d => colorScale(d)) // Use colorScale based on ISIN or category
+      .attr("fill", d => colorScale(d) as string)  
       .attr("stroke", "hsl(var(--foreground))")
       .attr("stroke-width", 1);
 

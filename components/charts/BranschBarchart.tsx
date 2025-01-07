@@ -80,7 +80,7 @@ export default function BranschCountChart() {
     
 
         const colorScale = d3.scaleOrdinal()
-            .domain(dataSeries.map(d => d.percentage))
+            .domain(dataSeries.map(d => d.sektorer))
             .range(d3.range(0, 1, 1 / dataSeries.length).map(d => d3.rgb(0, 255, 255).darker(1 + d * 2)));
 
                 // Improved text truncation function with more precise calculations
@@ -138,7 +138,10 @@ export default function BranschCountChart() {
             .attr("height", y.bandwidth())
             .attr("rx", 4)
             .attr("ry", 4)
-            .attr("fill", d => colorScale(d.percentage))
+            .attr("fill", (d: CountData): string => {
+                const color = colorScale(d.sektorer || 'No ISIN');
+                return (color ?? 'gray') as string;
+            })            
             .style("opacity", 0.9)
             .attr("width", 0)
             .on("mouseover", (event, d) => {
@@ -194,7 +197,7 @@ export default function BranschCountChart() {
                 const labelText = `${d.sektorer === "Energi" ? "" : d.sektorer}: ${d.percentage.toFixed(2)}%`;
                 const truncatedText = truncateText(labelText, barWidth);
                 
-                d3.select(this.parentNode)
+                d3.select(this.parentNode as Element)                    
                     .select("text")
                     .text(truncatedText)
                     .transition()

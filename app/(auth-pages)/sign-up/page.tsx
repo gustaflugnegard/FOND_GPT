@@ -1,49 +1,100 @@
+'use client'
+
 import { signUpAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
+import { signInWithGoogle } from "@/app/actions";
+import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import Image from "next/image";
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from "react";
 
-export default async function Signup(props: {
-  searchParams: Promise<Message>;
-}) {
-  const searchParams = await props.searchParams;
-  if ("message" in searchParams) {
-    return (
-      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
-        <FormMessage message={searchParams} />
-      </div>
-    );
-  }
+
+function SignupContent() {
+  const searchParams = useSearchParams();
+  const message = searchParams?.get('message') ? JSON.parse(searchParams.get('message')!) : null;
 
   return (
-    <>
-      <form className="flex flex-col min-w-64 max-w-64 mx-auto">
-        <h1 className="text-2xl font-medium">Sign up</h1>
-        <p className="text-sm text text-foreground">
-          Already have an account?{" "}
-          <Link className="text-primary font-medium underline" href="/sign-in">
-            Sign in
-          </Link>
-        </p>
-        <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-          <Label htmlFor="email">Email</Label>
-          <Input name="email" placeholder="you@example.com" required />
-          <Label htmlFor="password">Password</Label>
-          <Input
-            type="password"
-            name="password"
-            placeholder="Your password"
-            minLength={6}
-            required
-          />
-          <SubmitButton formAction={signUpAction} pendingText="Signing up...">
-            Sign up
-          </SubmitButton>
-          <FormMessage message={searchParams} />
-        </div>
-      </form>
-    </>
+    <div className="container flex items-center justify-center min-h-screen py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold text-center">Sign up</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" action={signUpAction}>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Your password"
+                minLength={6}
+                required
+              />
+            </div>
+            <SubmitButton className="w-full" pendingText="Signing up...">
+              Sign up
+            </SubmitButton>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* Google OAuth Form */}
+            <div className="mt-6">
+              <form action={signInWithGoogle}>
+                <Button type="submit" variant="outline" className="w-full">
+                  <Image
+                    src="/google-logo.svg"
+                    alt="Google logo"
+                    width={20}
+                    height={20}
+                    className="mr-2"
+                  />
+                  Sign up with Google
+                </Button>
+              </form>
+            </div>
+          </div>
+
+          {message && <FormMessage message={message} />}
+        </CardContent>
+        <CardFooter>
+          <p className="text-sm text-center text-muted-foreground w-full">
+            Already have an account?{" "}
+            <Link className="font-medium text-primary hover:underline" href="/sign-in">
+              Sign in
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupContent />
+    </Suspense>
   );
 }

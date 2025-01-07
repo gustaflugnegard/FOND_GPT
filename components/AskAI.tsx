@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import React, { ReactNode } from 'react';
 import remarkGfm from 'remark-gfm';
@@ -16,6 +16,7 @@ import {
   AlertDescription,
 } from "@/components/ui/index";
 import { Loader2 } from "lucide-react";
+import { estimateTokensForQuestion } from './askai_tools/token_estimation'; 
 
 interface CodeProps {
   node?: any;
@@ -27,10 +28,7 @@ interface CodeProps {
 const CustomCodeComponent = ({ node, className, children, ...props }: CodeProps) => {
   return (
     <pre className="p-6 mb-6 rounded-lg bg-gray-100 dark:bg-gray-800 whitespace-pre-wrap break-words">
-      <code
-        {...props}
-        className={`text-sm ${className || ''}`}
-      >
+      <code {...props} className={`text-sm ${className || ''}`}>
         {children}
       </code>
     </pre>
@@ -43,19 +41,55 @@ const AskAI = () => {
   const [questionTokens, setQuestionTokens] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [edgeFunction, setEdgeFunction] = useState('edge2'); // State to store selected edge function
+  const [edgeFunction, setEdgeFunction] = useState('edge2');
+  const [availableTokens, setAvailableTokens] = useState<number | null>(null);
+  const [estimatedTokens, setEstimatedTokens] = useState(0);
+
+  // Fetch available tokens on mount
+  useEffect(() => {
+    fetchTokens();
+  }, []);
+
+  // Update estimated tokens when question changes
+  useEffect(() => {
+    const tokens = estimateTokensForQuestion(question);
+    setEstimatedTokens(tokens);
+  }, [question]);
+
+  const fetchTokens = async () => {
+    try {
+      const res = await fetch('/api/tokens');
+      const data = await res.json();
+      setAvailableTokens(data.tokens);
+    } catch (error) {
+      console.error('Failed to fetch tokens:', error);
+      setError('Failed to fetch token balance');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Token validation checks
+    if (availableTokens === null) {
+      setError('Loading token balance...');
+      return;
+    }
+
+    if (estimatedTokens > availableTokens) {
+      setError('Insufficient tokens for this question');
+      return;
+    }
+
     setIsLoading(true);
     setResponse('');
     setQuestionTokens(0);
     setError('');
 
     try {
-      // Dynamically set the API route based on selected edge function
-      const edgeUrl = edgeFunction === 'edge1' ? '/api/askAI' : '/api/askDOCS';
 
+      // proceed with the question
+      const edgeUrl = edgeFunction === 'edge1' ? '/api/askAI' : '/api/askDOCS';
       const res = await fetch(edgeUrl, {
         method: 'POST',
         headers: {
@@ -74,9 +108,37 @@ const AskAI = () => {
         setResponse((prev) => prev + decodedChunk);
       }
 
-      // Extract question tokens from headers if needed
-      const tokens = res.headers.get('X-Question-Tokens');
-      setQuestionTokens(Number(tokens) || 0);
+      // Get actual tokens used and adjust if needed
+      const actualTokens = Number(res.headers.get('X-Question-Tokens')) || 0;
+      setQuestionTokens(actualTokens);
+
+      if (actualTokens > availableTokens) {
+        setError(
+          'Your token balance is low. Top up your account to continue asking questions.'
+        );
+      }
+
+      const tokensToDeduct = actualTokens > availableTokens ? availableTokens : actualTokens;
+
+      // First deduct the estimated tokens
+      const deductRes = await fetch('/api/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'deduct',
+          amount: tokensToDeduct,
+        }),
+      });
+
+      if (!deductRes.ok) {
+        throw new Error('Failed to deduct tokens');
+      }
+
+      // Fetch updated token balance
+      await fetchTokens();
+
     } catch (error) {
       console.error('Error:', error);
       setError('Failed to get a response from the server.');
@@ -87,7 +149,7 @@ const AskAI = () => {
 
   return (
     <div className="space-y-4 sm:px-0">
-      <Card className="sm:max-w-4xl mx-auto w-full">
+      <Card className="sm:max-w-5xl mx-auto w-full">
         <CardHeader className="relative">
           <div className="flex items-center justify-between mb-2">
             <select
@@ -98,7 +160,9 @@ const AskAI = () => {
               <option value="edge2">Fond Databas</option>
               <option value="edge1">GPT Knowledge</option>
             </select>
-            <div></div> {/* Placeholder to balance the layout */}
+            <div className="text-sm text-gray-600">
+              Available Tokens: {availableTokens ?? 'Loading...'}
+            </div>
           </div>
           <div className="flex justify-center">
             <CardTitle className="text-2xl font-bold">
@@ -121,11 +185,16 @@ const AskAI = () => {
                   className="w-full"
                   required
                   aria-label="Question input"
+                  maxLength={600}  // Set your desired character limit
                 />
               </div>
               <Button
                 type="submit"
-                disabled={isLoading || !question.trim()}
+                disabled={
+                  isLoading || 
+                  !question.trim() || 
+                  (availableTokens !== null && estimatedTokens > availableTokens)
+                }
                 aria-label={isLoading ? "Loading..." : "Submit question"}
                 className="w-full sm:w-auto"
               >
@@ -139,9 +208,12 @@ const AskAI = () => {
                 )}
               </Button>
             </div>
-            <small className="text-gray-500 ml-2">Question Tokens: {questionTokens}</small>
+            <div className="flex justify-between text-sm text-gray-500 px-2">
+              <span>Estimated Tokens: {estimatedTokens}</span>
+              {questionTokens > 0 && <span>Actual Tokens Used: {questionTokens}</span>}
+            </div>
           </form>
-  
+
           {error && (
             <Alert variant="destructive" className="mt-4">
               <AlertDescription>
@@ -152,7 +224,7 @@ const AskAI = () => {
               </AlertDescription>
             </Alert>
           )}
-  
+
           {response && (
             <div className="">
               <CardTitle className="flex items-center justify-between">
@@ -169,7 +241,7 @@ const AskAI = () => {
               </div>
             </div>
           )}
-  
+
           {isLoading && (
             <div className="mt-4 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-gray-500" />

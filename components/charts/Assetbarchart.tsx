@@ -69,15 +69,18 @@ export default function AssetCountChart() {
     
         // Y scale based on the first fund name
         const y = d3.scaleBand()
-            .domain(
-                dataSeries.map(d => 
-                    d.fondnames && d.fondnames.length > 0
-                        ? d.fondnames[0] // Use the first fund name
-                        : 'No Name' // Fallback if fondnames is undefined or empty
-                )
-            )
-            .range([0, height])
-            .padding(0.1); // Space between bars
+        .domain(
+            dataSeries.map(d => {
+                if (d.fondnames && d.fondnames.length > 0) {
+                    return d.fondnames[0]; // Use the first fund name
+                }
+                return 'No Name'; // Fallback if fondnames is undefined or empty
+            }).filter(d => d !== undefined) // Remove any undefined values if present
+        )
+        .range([0, height])
+        .padding(0.1); // Space between bars
+    
+    
     
         // Create color scale
         const colorScale = d3.scaleOrdinal()
@@ -106,16 +109,17 @@ export default function AssetCountChart() {
             .join("rect")
             .attr("class", "bar")
             .attr("x", 0)
-            .attr("y", d => {
-                if (d.fondnames && d.fondnames.length > 0) {
-                    return y(d.fondnames[0]); // Use the first fund name
-                }
-                return y('No Name'); // Use fallback if fondnames is undefined or empty
-            })
+            .attr("y", (d: CountData): number => {
+                return y(d.fondnames?.[0] || 'No Name') as number;
+            })            
             .attr("height", y.bandwidth()) // Ensure bars have height according to the y scale
             .attr("rx", 4)
             .attr("ry", 4)
-            .attr("fill", d => colorScale(d.isin_kod || 'No ISIN'))
+            // Ensure that colorScale returns a valid color string
+            .attr("fill", (d: CountData): string => {
+                const color = colorScale(d.isin_kod || 'No ISIN');
+                return (color ?? 'gray') as string;
+            })
             .style("opacity", 0.9)
             // Do not set width here, allow the transition to handle it
             .on("mouseover", (event, d) => {

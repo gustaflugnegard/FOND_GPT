@@ -89,10 +89,7 @@ export default function FeeImpactChart() {
     chart.append("g")
       .attr("class", "grid")
       .attr("transform", `translate(0,0)`)
-      .call(d3.axisLeft(y)
-        .tickSize(-width)
-        .tickFormat("")
-      )
+      .call(d3.axisLeft(y).tickSize(-width).tickFormat(() => ""))      
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")
@@ -104,7 +101,7 @@ export default function FeeImpactChart() {
     // Add axes
     chart.append("g")
       .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y")))
+      .call(d3.axisBottom(x).tickFormat((d: Date | d3.NumberValue) => d3.timeFormat("%Y")(d as Date)))      
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line")

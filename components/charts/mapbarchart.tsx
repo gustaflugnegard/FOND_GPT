@@ -135,7 +135,10 @@ export default function MapBarChart() {
             .attr("height", y.bandwidth())
             .attr("rx", 4)
             .attr("ry", 4)
-            .attr("fill", d => colorScale(d.percentage))
+            .attr("fill", (d: CountData): string => {
+                const color = colorScale(d.land_namn || 'No ISIN');
+                return (color ?? 'gray') as string;
+            })                
             .style("opacity", 0.9)
             .attr("width", 0)
             .on("mouseover", (event, d) => {
@@ -193,7 +196,7 @@ export default function MapBarChart() {
                 const labelText = `${d.land_namn === "No Country" ? "" : d.land_namn}: ${d.percentage.toFixed(2)}%`;
                 const truncatedText = truncateText(labelText, barWidth);
         
-                d3.select(this.parentNode)
+                d3.select(this.parentNode as Element)                    
                     .select("text")
                     .text(truncatedText)
                     .transition()

@@ -9,6 +9,19 @@ interface CountData {
     percentage: number;
 }
 
+interface HierarchicalNode {
+    name: string;
+    value?: number;  // Make `value` optional for the root node
+    children?: HierarchicalNode[];
+}
+
+interface TreemapNode extends d3.HierarchyNode<HierarchicalNode> {
+    x0: number;
+    x1: number;
+    y0: number;
+    y1: number;
+  }
+
 export default function BranschCountChart() {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -62,18 +75,21 @@ export default function BranschCountChart() {
     const drawChart = () => {
         if (!dataSeries.length || !svgRef.current || !containerRef.current) return;
 
-        const root = d3.hierarchy({
+        const root = d3.hierarchy<HierarchicalNode>({
             name: "root",
             children: dataSeries.map(d => ({
                 name: d.sektorer,
                 value: d.percentage
             }))
-        }).sum(d => d.value);
-
-        d3.treemap()
+        }).sum(d => d.value ?? 0);
+        
+        const treemap = d3.treemap<HierarchicalNode>()
             .size([dimensions.width, dimensions.height])
             .padding(2)
-            .round(true)(root);
+            .round(true);
+        
+        treemap(root);  // This should now work without the type mismatch error
+        
 
         const color = d3.scaleOrdinal()
             .domain(dataSeries.map(d => d.sektorer))
@@ -87,16 +103,16 @@ export default function BranschCountChart() {
             .attr("height", dimensions.height);
 
         // Create cells
-        const cells = svg.selectAll("g")
-            .data(root.leaves())
-            .join("g")
-            .attr("transform", d => `translate(${d.x0},${d.y0})`);
+        const cells = svg.selectAll<SVGGElement, TreemapNode>("g")
+        .data(root.leaves() as TreemapNode[])
+        .join("g")
+        .attr("transform", d => `translate(${d.x0},${d.y0})`);
 
         // Add rectangles with animation
         cells.append("rect")
             .attr("width", 0)
             .attr("height", 0)
-            .attr("fill", d => color(d.data.name))
+            .attr("fill", d => color(d.data.name) as string) 
             .attr("rx", 4)
             .attr("ry", 4)
             .style("opacity", 0.9)

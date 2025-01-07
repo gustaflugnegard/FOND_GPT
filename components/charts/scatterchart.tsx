@@ -100,9 +100,13 @@ export default function ScatterChart() {
 
     // Scales
     const x = d3.scaleLinear()
-      .domain([d3.min(dataSeries, d => d.stdavvikelse) - 2, d3.max(dataSeries, d => d.stdavvikelse) + 2])
+      .domain([
+        d3.min(dataSeries, d => d.stdavvikelse - 2 ) ?? 0, 
+        d3.max(dataSeries, d => d.stdavvikelse + 2) ?? 20
+      ])
       .range([0, width])
       .nice();
+    
 
     const y = d3.scaleLinear()
       .domain([0, d3.max(dataSeries, d => d.oneyear) ?? 20])
@@ -196,7 +200,10 @@ export default function ScatterChart() {
       .attr("cx", d => x(d.stdavvikelse))
       .attr("cy", d => y(d.oneyear))
       .attr("r", 6)
-      .attr("fill", d => colorScale(d.bolag))
+      .attr("fill", (d: ScatterData): string => {
+        const color = colorScale(d.bolag || 'No ISIN');
+        return (color ?? 'gray') as string;
+       })        
       .attr("opacity", 0.8)
       .attr("stroke", "hsl(var(--foreground))")
       .attr("stroke-width", 1.5)
@@ -281,7 +288,7 @@ export default function ScatterChart() {
       .call((g) => {
         g.append("circle")
           .attr("r", 5)
-          .attr("fill", (d) => colorScale(d))
+          .attr("fill", d => colorScale(d) as string) 
           .attr("stroke", "hsl(var(--foreground))")
           .attr("stroke-width", 1.5);
 
